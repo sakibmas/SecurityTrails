@@ -4,7 +4,7 @@ pipeline {
         stage('Get Domain Record History') {
             steps {
                 sh '''#!/bin/bash
-                      curl --request GET --url https://api.securitytrails.com/v1/history/$domain/dns/$record_type --header 'apikey: $api_key''''
+                      curl --request GET --url https://api.securitytrails.com/v1/history/$domain/dns/$record_type --header "apikey: $api_key"'''
             }
         }
     }
