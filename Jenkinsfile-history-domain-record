@@ -4,7 +4,33 @@ pipeline {
         stage('Get Domain Record History') {
             steps {
                 sh '''#!/bin/bash
-                      curl --request GET --url https://api.securitytrails.com/v1/history/$domain/dns/$record_type --header "apikey: $api_key"'''
+                      # Define a function that checks for a command and installs the corresponding package
+                      install_if_missing() {
+                            local cmd="$1"
+                            local pkg="$2"
+                        
+                            if ! command -v "$cmd" &> /dev/null; then
+                                echo "'$cmd' not found. Installing package '$pkg'..."
+                        
+                                # Detect package manager and install
+                                if command -v apt &> /dev/null; then
+                                    sudo apt update
+                                    sudo apt install -y "$pkg"
+                                elif command -v yum &> /dev/null; then
+                                    sudo yum install -y "$pkg"
+                                elif command -v pacman &> /dev/null; then
+                                    sudo pacman -Sy --noconfirm "$pkg"
+                                else
+                                    echo "Unsupported package manager. Please install '$pkg' manually."
+                                    return 1
+                                fi
+                            else
+                                echo "'$cmd' is already installed."
+                            fi
+                      }
+                      install_if_missing curl curl
+                      install_if_missing jq jq
+                      curl --silent --request GET --url https://api.securitytrails.com/v1/history/$domain/dns/$record_type --header "apikey: $api_key" | jq .'''
             }
         }
     }
